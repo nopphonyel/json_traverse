@@ -8,15 +8,15 @@ My lib parse the JSON string into composition of HashMaps and vectors where JSON
 ## How
 Since Rust is type strict, but still allow multiple types in enum, so I create an enum called JSON for support all of data types in JSON string. The table below shows the relation between my enum and the JSON data type.
 
-enum | JSON Data type
-----------------
-JSON::Int | Number `123`
-JSON::Flt* | Number with floating points `123.321`
-JSON::Str | String `"Example String"`
-JSON::Lst | A JSON List `[ "Str1", 12, 13.1 ]`
-JSON::Obj | An JSON Object `{ "K1":12, "K2":false }`
-JSON::Bol | A boolean data `true, false`
-JSON::NUL | A null data type `null`
+| enum | JSON Data type|
+|-------|---------|
+| JSON::Int | Number `123` |
+| JSON::Flt* | Number with floating points `123.321` |
+| JSON::Str | String `"Example String"` |
+| JSON::Lst | A JSON List `[ "Str1", 12, 13.1 ]` |
+| JSON::Obj | An JSON Object `{ "K1":12, "K2":false }` |
+| JSON::Bol | A boolean data `true, false` |
+| JSON::NUL | A null data type `null` |
 
 ## When
 Currently, it is still in an alpha stage, I didn't finish the test yet, also the code so messy with a lot of duplication state ;-; I promise I will do code cleanup in some day. Thus, I can't give you any promise when this lib going to be on **crate.io**.
