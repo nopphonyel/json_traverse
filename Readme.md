@@ -10,13 +10,13 @@ Since Rust is type strict, but still allow multiple types in enum, so I create a
 
 | enum | JSON Data type|
 |-------|---------|
-| JSON::Int | Number `123` |
-| JSON::Flt* | Number with floating points `123.321` |
-| JSON::Str | String `"Example String"` |
-| JSON::Lst | A JSON List `[ "Str1", 12, 13.1 ]` |
-| JSON::Obj | An JSON Object `{ "K1":12, "K2":false }` |
-| JSON::Bol | A boolean data `true, false` |
-| JSON::NUL | A null data type `null` |
+| `JSON::Int`  | Number: `123` |
+| `JSON::Flt*` | Number with floating points: `123.321` |
+| `JSON::Str` | A JSON String datatype: `"Example String"` |
+| `JSON::Lst` | A JSON List: `[ "Str1", 12, 13.1 ]` |
+| `JSON::Obj` | An JSON Object: `{ "K1":12, "K2":false }` |
+| `JSON::Bol` | A boolean data: `true, false` |
+| `JSON::Nul` | A null data type: `null` |
 
 ## When
 Currently, it is still in an alpha stage, I didn't finish the test yet, also the code so messy with a lot of duplication state ;-; I promise I will do code cleanup in some day. Thus, I can't give you any promise when this lib going to be on **crate.io**.
