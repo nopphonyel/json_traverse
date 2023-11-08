@@ -1,13 +1,13 @@
 # JSON Traverse
 
 ## What
-This lib will parse the JSON string into composition of HashMaps and Vectors where JSON Object will be convert to HashMaps and JSON List will be the Vector. I decided to use Hashmap because it is easy to retrive the key and iterate through it without any fancy method.
+This lib will parse the JSON string into a composition of HashMaps and Vectors where JSON Object will be convert to HashMaps and JSON List will be the Vector. I decided to use Hashmap because it is easy to retrive the key and iterate through it without any fancy method.
 
 ## Why
-I'm looking for a JSON tool in rust language that can able to easily retrive the key of the JSON object. I tried `serde`, may be I'm too dumb but I can't find the way to retrive the list or iterable of keys from JSON object, so I decided to implement JSON parser by myself.
+I'm looking for a JSON parsing lib in Rust language that easily to retreive list JSON Object keys. I tried `serde`, maybe I'm too dumb but I can't find any simple way to retreive it, so I decided to implement a JSON parser.
 
 ## How
-Since Rust is type strict, but still allow multiple types in enum, so I create an enum called JSON to support all of data types in JSON. The table below shows the relation between my enum and each of JSON data type.
+Since Rust is type strict but still allows multiple types in enum, I create an enum called `JSON` to support all of data types in JSON. The table below shows the relation between my enum and each of JSON data type.
 
 | enum | JSON Data type|
 |-------|---------|
@@ -19,9 +19,11 @@ Since Rust is type strict, but still allow multiple types in enum, so I create a
 | `JSON::Bol` | A boolean data: `true, false` |
 | `JSON::Nul` | A null data type: `null` |
 
+For the algorithm of this lib, I got some inspiration from PDA (Push Down Automata) and I tried to code this by myself, so please do not expect any excellent coding style or idiomatic way of rust or 100% correctness of PDA.
+
 ## When
-Currently, it is still in an alpha stage, I didn't finish the test yet, also the code so messy with a lot of duplication state ;-; (I use the concept of push down automata to implement this...) I promise I will do code cleanup in.... some day. Thus, I can't give you any clear date when this lib going to be on **crate.io**.
+Currently, it is still in the alpha stage. I didn't finish the test yet, also the code so messy with a lot of duplication states ;-; I promise I will do code cleanup in.... some day, but I can't give you any precise date when this lib going to be on **crate.io**.
 
 ### *PS: 
-- For the float data type, I still find a good way to merge with JSON::Int and renamed it to JSON::Num... but I still not sure which will be the best solution.
+- For the float data type, I still find a good way to merge with `JSON::Int` and renamed it to `JSON::Num`... but I still not sure which will be the best solution.
 - all of `panics` is going to be remove soon.
