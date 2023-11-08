@@ -22,4 +22,6 @@ Since Rust is type strict, but still allow multiple types in enum, so I create a
 ## When
 Currently, it is still in an alpha stage, I didn't finish the test yet, also the code so messy with a lot of duplication state ;-; (I use the concept of push down automata to implement this...) I promise I will do code cleanup in.... some day. Thus, I can't give you any clear date when this lib going to be on **crate.io**.
 
-*PS: For the float data type, I still find a good way to merge with JSON::Int and renamed it to JSON::Num... but I still not sure which will be the best solution.
+### *PS: 
+- For the float data type, I still find a good way to merge with JSON::Int and renamed it to JSON::Num... but I still not sure which will be the best solution.
+- all of `panics` is going to be remove soon.
