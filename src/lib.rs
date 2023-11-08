@@ -227,6 +227,11 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
             }
         }
 
+        // Debug zone
+        if line_idx == 8 && ch_pos == 18 {
+            println!("Start DBG Mode!");
+        }
+
         match state.0 {
             Inside::Bgn => {
                 match ch {
@@ -238,7 +243,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                         mem.push(Preb::BgnLst);
                         state.0 = Inside::List;
                     }
-                    ' ' | '\n' | '\t' => { /* Do nothing ...*/ }
+                    ' ' | '\n' | '\r' | '\t' => { /* Do nothing ...*/ }
                     _ => {
                         err_panic(line_idx, ch_pos, "Expected \'{{\' or \'[\'.");
                     }
@@ -248,7 +253,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                 match state.1 {
                     S::Ready => {
                         match ch {
-                            ' ' | '\n' | '\t' => {} // Do nothing if space bar is entered
+                            ' ' | '\n' | '\r' | '\t' => {} // Do nothing if space bar is entered
                             '}' => {
                                 // End of object, try to pack up the previous entry
                                 match pack_object(&mut mem) {
@@ -268,7 +273,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                         }
                     }
                     S::ExpectKey => match ch {
-                        ' ' | '\n' | '\t' => {}
+                        ' ' | '\n' | '\r' | '\t' => {}
                         '\"' => {
                             state.1 = S::BgnKey;
                             temp_key = Some(String::new());
@@ -325,7 +330,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                             ':' => {
                                 state.1 = S::ExpectVal;
                             }
-                            ' ' | '\t' | '\n' => {}
+                            ' ' | '\t' | '\r' | '\n' => {}
                             _ => {
                                 // Crash here because of unexpected character
                                 err_panic(
@@ -427,7 +432,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                     "Unexpected ']'! You are inside an Object, not a List!",
                                 )
                             }
-                            ' ' | '\n' | '\t' => { // I think we safe to pack entry here
+                            ' ' | '\n' | '\r' | '\t' => { // I think we safe to pack entry here
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Res::Done(pv) => {
@@ -488,7 +493,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                     "Unexpected ']'! You are inside an Object, not a List!",
                                 );
                             }
-                            ' ' | '\t' | '\n' => {}, // Ignore case
+                            ' ' | '\t' | '\r' | '\n' => {}, // Ignore case
                             _ => {
                                 err_panic(line_idx, ch_pos, "Expected '}' to finish the object");
                             }
@@ -560,7 +565,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                 // Example case: { ... ,"key1": "value", ... }
                                 state.1 = S::ExpectKey;
                             }
-                            ' ' | '\t' | '\n' => {} // ignore case
+                            ' ' | '\t' | '\r' | '\n' => {} // ignore case
                             _ => {
                                 err_panic(line_idx, ch_pos, "Unexpected any character after end the String value")
                             }
@@ -576,7 +581,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                 }
                                 state.1 = S::ExpectKey;
                             }
-                            ' ' | '\t' | '\n' => {} // ignore case
+                            ' ' | '\t' | '\r' | '\n' => {} // ignore case
                             '}' => {
                                 // pack up the object
                                 if let Res::Fail(err_msg) = pack_entry(&mut mem) {
@@ -624,7 +629,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                 state.1 = S::BgnPrimV;
                                 temp_val = Some(String::from(ch));
                             }
-                            ' ' | '\t' | '\n' => {}
+                            ' ' | '\t' | '\r' | '\n' => {}
                             _ => {
                                 err_panic(line_idx, ch_pos, "Expected value to be number, string, true, false or null");
                             }
@@ -658,7 +663,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                             state.1 = S::BgnPrimV;
                             temp_val = Some(String::from(ch));
                         }
-                        ' ' | '\t' | '\n' => {}
+                        ' ' | '\t' | '\r' | '\n' => {}
                         _ => {
                             err_panic(line_idx, ch_pos, "Expected value to be number, string, true, false or null");
                         }
@@ -710,7 +715,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                 // Update where we are
                                 state.0 = inside_what(&mem);
                             }
-                            ' ' | '\n' | '\t' => {
+                            ' ' | '\n' | '\r' | '\t' => {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Res::Done(pv) => {
@@ -831,7 +836,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                                 // Example case: [ ... ,"key1", "value", ... ]
                                 state.1 = S::ExpectVal;
                             }
-                            ' ' | '\t' | '\n' => {} // ignore case
+                            ' ' | '\t' | '\r' | '\n' => {} // ignore case
                             _ => {
                                 err_panic(line_idx, ch_pos, "Unexpect any char after end of the String value");
                             }
@@ -855,7 +860,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
                             ',' => {
                                 state.1 = S::ExpectVal;
                             }
-                            ' ' | '\t' | '\n' => {}
+                            ' ' | '\t' | '\r' | '\n' => {}
                             _ => {
                                 err_panic(line_idx, ch_pos, "Unexpect any char after end of the container");
                             }
@@ -865,7 +870,7 @@ pub fn parse(json_str: &String) -> Result<JSON, String> {
             }
             Inside::End => {
                 match ch {
-                    ' ' | '\t' | '\n' => {}
+                    ' ' | '\t' | '\r' | '\n' => {}
                     _ => {
                         err_panic(line_idx, ch_pos, "No more character please!");
                     }
@@ -922,7 +927,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        if let Ok(str_content) = fs::read_to_string("./test_json.json") {
+        if let Ok(str_content) = fs::read_to_string("./dook.json") {
             println!("Testing json content : \n{str_content}");
             match parse(&str_content){
                 Ok(json) => {
@@ -932,8 +937,20 @@ mod tests {
                             println!("{:?}", obj);
                         },
                         JSON::Obj(obj) => {
+                            for each_key in obj.keys() {
+                                println!("{each_key}");
+                            }
+
+                            if let Some(some_obj) = obj.get("results") {
+                                if let JSON::Lst(vec) = some_obj {
+                                    for each_element in vec {
+                                        println!("{:?}", each_element);
+                                    }
+                                }
+                            }
+                            
                             println!("Found JSON Object as root");
-                            println!("{:?}", obj);
+                            //println!("{:?}", obj);
                         },
                         _ => {}
                     }
