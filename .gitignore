@@ -3,3 +3,5 @@
 /.idea
 /.vscode
 /json_test
+examples/prime_groups.rs
+prime_num.txt

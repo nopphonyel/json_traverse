@@ -12,6 +12,7 @@ pub enum JSON {
     Nul,
 }
 
+#[derive(Debug)]
 enum Preb {
     BgnObj,
     BgnLst,
@@ -39,7 +40,7 @@ enum S {
     EndPrimV,  // 6
     BgnStrV,   // 7: This is for the esc char case
     EndStrV,   // 8
-    EndCtnr,   // 9
+               //EndCtnr,   // 9
 }
 
 fn inside_what(mem: &Vec<Preb>) -> Inside {
@@ -227,7 +228,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
         }
 
         // Debug zone
-        if line_idx == 8 && ch_pos == 18 {
+        if line_idx == 18655 && ch != ' ' {
             println!("Start DBG Mode!");
         }
 
@@ -247,7 +248,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         return Err(ParseErr::e(
                             line_idx,
                             ch_pos,
-                            "Expected \'{{\' or \'[\'.".to_string(),
+                            "Expected \'{{\' or \'[\'.".into(),
                         ));
                     }
                 }
@@ -260,10 +261,10 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             '}' => {
                                 // End of object, try to pack up the previous entry
                                 if let Err(err_msg) = pack_object(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
+                                state.1 = S::EndPrimV;
                             }
                             '\"' => {
                                 state.1 = S::BgnKey;
@@ -273,7 +274,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Expected a String value as key.".to_string(),
+                                    "Expected a String value as key.".into(),
                                 ));
                             }
                         }
@@ -288,7 +289,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             return Err(ParseErr::e(
                                 line_idx,
                                 ch_pos,
-                                "Expected a String value as key.".to_string(),
+                                "Expected a String value as key.".into(),
                             ));
                         }
                     },
@@ -302,12 +303,12 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            "String key not yet initialize.".to_string(),
+                                            "String key not yet initialize.".into(),
                                         ));
                                     }
                                 }
                                 Err(err_msg) => {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                             }
                             esc_ch = false;
@@ -461,7 +462,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 temp_val = None;
                                 // Update where we are
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
+                                state.1 = S::EndPrimV;
                             }
                             ']' => {
                                 // This also imply that it is the end of list
@@ -523,6 +524,29 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                     S::EndPrimV => {
                         // This state will occur when after parsing the primitive value
                         // In other words, only when found the ' ', '\t' or '\n'
+                        // Check that top of stack is entry already... if not then pack it
+                        if let Some(preb) = &mem.last() {
+                            match preb {
+                                Preb::Ent(_, _) => {}
+                                Preb::Val(_) => {
+                                    if let Err(err_msg) = pack_entry(&mut mem) {
+                                        return Err(ParseErr::e(
+                                            line_idx,
+                                            ch_pos,
+                                            err_msg.to_string(),
+                                        ));
+                                    }
+                                }
+                                _ => {
+                                    return Err(ParseErr::e(
+                                        line_idx,
+                                        ch_pos,
+                                        "Expected Value".to_string(),
+                                    ));
+                                }
+                            }
+                        }
+
                         match ch {
                             ',' => {
                                 // Maybe safe to jump to start
@@ -536,12 +560,15 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 // This imply that it is the end of object
                                 // What we do is: just pack the object (Packing entry is done when found ' ', '\n', '\t' on  previous state)
                                 // Example { ... "k12": true }
+
+                                // Check the top of mem stack before pack object
+
                                 if let Err(err_msg) = pack_object(&mut mem) {
                                     return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
                                 }
                                 // Update where we are
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr; // Objects are count as Primitive Value
+                                state.1 = S::EndPrimV; // Objects are count as Primitive Value
                             }
                             ']' => {
                                 return Err(ParseErr::e(
@@ -633,7 +660,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
                                 }
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
+                                state.1 = S::EndPrimV;
                             }
                             ',' => {
                                 // Example case: { ... ,"key1": "value", ... }
@@ -645,38 +672,6 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected any character after end the String value"
-                                        .to_string(),
-                                ));
-                            }
-                        }
-                    }
-                    S::EndCtnr => {
-                        // In case that we in an object, we need to pack entry
-                        match ch {
-                            ',' => {
-                                // Go to expect key
-                                if let Err(err_msg) = pack_entry(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
-                                }
-                                state.1 = S::ExpectKey;
-                            }
-                            ' ' | '\t' | '\r' | '\n' => {} // ignore case
-                            '}' => {
-                                // pack up the object
-                                if let Err(err_msg) = pack_entry(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
-                                }
-                                if let Err(err_msg) = pack_object(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
-                                }
-                                state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
-                            }
-                            _ => {
-                                return Err(ParseErr::e(
-                                    line_idx,
-                                    ch_pos,
-                                    "Unexpected any character after end the container value"
                                         .to_string(),
                                 ));
                             }
@@ -702,7 +697,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
                             }
                             state.0 = inside_what(&mem);
-                            state.1 = S::EndCtnr;
+                            state.1 = S::EndPrimV;
                         }
                         '\"' => {
                             state.1 = S::BgnStrV;
@@ -899,7 +894,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 }
                                 // Update where we are
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr; // Objects are count as Primitive Value
+                                state.1 = S::EndPrimV; // Objects are count as Primitive Value
                             }
                             '}' => {
                                 return Err(ParseErr::e(
@@ -909,6 +904,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         .to_string(),
                                 ));
                             }
+                            ' ' | '\t' | '\r' | '\n' => {}
                             _ => {
                                 return Err(ParseErr::e(
                                     line_idx,
@@ -980,7 +976,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
                                 }
                                 state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
+                                state.1 = S::EndPrimV;
                             }
                             ',' => {
                                 // Example case: [ ... ,"key1", "value", ... ]
@@ -995,38 +991,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 ));
                             }
                         }
-                    }
-                    S::EndCtnr => {
-                        // No need to pack object since we are in a list
-                        match ch {
-                            ']' => {
-                                // Example case: [ ... ,"value1", "value2" ]
-                                if let Err(err_msg) = pack_list(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
-                                }
-                                state.0 = inside_what(&mem);
-                                state.1 = S::EndCtnr;
-                            }
-                            '}' => {
-                                return Err(ParseErr::e(
-                                    line_idx,
-                                    ch_pos,
-                                    "You're in a list, not an object!".to_string(),
-                                ));
-                            }
-                            ',' => {
-                                state.1 = S::ExpectVal;
-                            }
-                            ' ' | '\t' | '\r' | '\n' => {}
-                            _ => {
-                                return Err(ParseErr::e(
-                                    line_idx,
-                                    ch_pos,
-                                    "Unexpect any char after end of the container".to_string(),
-                                ));
-                            }
-                        }
-                    }
+                    } 
                 }
             }
             Inside::End => match ch {
@@ -1084,8 +1049,75 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
     }
 }
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
+    match obj {
+        JSON::Lst(lst) => {
+            if lvl == 0 {
+                println!("[ ");
+            }
+            let len = lst.len();
+            for i in 0..len {
+                let e_item = lst.get(i).unwrap();
+                match e_item {
+                    JSON::Int(i) => { print!("{}{i}", ident_str.repeat(lvl)); },
+                    JSON::Flt(f) => { print!("{}{f}", ident_str.repeat(lvl)); },
+                    JSON::Str(s) => { print!("{}\"{s}\"", ident_str.repeat(lvl)); },
+                    JSON::Lst(_) => {
+                        println!("{}[ ", ident_str.repeat(lvl));
+                        pretty_print(e_item, lvl+1, ident_str)?
+                    },
+                    JSON::Obj(_) => {
+                        println!("{}{{ ", ident_str.repeat(lvl)); 
+                        pretty_print(e_item, lvl+1, ident_str)?
+                    },
+                    JSON::Bol(b) => { print!("{}{:?}",ident_str.repeat(lvl), b); },
+                    JSON::Nul => { print!("{}null", ident_str.repeat(lvl)); },
+                }
+                if i < len - 1 {
+                    println!(",");
+                } else {
+                    println!("");
+                }
+            }
+            print!("{}]", " ".repeat(lvl));
+            Ok(())
+        },
+        JSON::Obj(obj) => {
+            if lvl == 0 {
+                println!("{{ ");
+            }
+            let mut elem_count = obj.len();
+            for (k, v) in obj {
+                elem_count -= 1;
+                print!("{}\"{k}\": ", ident_str.repeat(lvl+1));
+                match v {
+                    JSON::Int(i) => { print!("{i}"); },
+                    JSON::Flt(f) => { print!("{f}"); },
+                    JSON::Str(s) => { print!("\"{s}\""); },
+                    JSON::Lst(_) => {
+                        println!("[ ");
+                        pretty_print(v, lvl+1, ident_str)?
+                    },
+                    JSON::Obj(_) => { 
+                        println!("{{ ");
+                        pretty_print(v, lvl+1, ident_str)? 
+                    },
+                    JSON::Bol(b) => { print!("{:?}", b); },
+                    JSON::Nul => { print!("null"); },
+                }
+                if elem_count > 0 {
+                    println!(",");
+                } else {
+                    println!("");
+                }
+            }
+            print!("{}}}", " ".repeat(lvl));
+            Ok(())
+        },
+        _ => {
+            Err("Expected a JSON list or object".into())
+        },
+    }
 }
 
 /*
@@ -1103,14 +1135,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-
-    #[test]
     fn test_parse() {
-        if let Ok(str_content) = fs::read_to_string("json_test/dook.json") {
+        if let Ok(str_content) = fs::read_to_string("json_test/Fai_testcase1.json") {
             println!("Testing json content : \n{str_content}");
             match parse(&str_content) {
                 Ok(json) => {
@@ -1131,7 +1157,6 @@ mod tests {
                                     }
                                 }
                             }
-
                             println!("Found JSON Object as root");
                             //println!("{:?}", obj);
                         }
@@ -1141,6 +1166,16 @@ mod tests {
                 Err(err_msg) => {
                     println!("{err_msg}");
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_pretty_print(){
+        if let Ok(str_content) = fs::read_to_string("json_test/dook.json") {
+            if let Ok(json_obj) = parse(&str_content){
+                let r = pretty_print(&json_obj, 0, "  ");
+                assert_eq!(r, Ok(()));
             }
         }
     }
