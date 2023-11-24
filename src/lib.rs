@@ -228,7 +228,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
         }
 
         // Debug zone
-        if line_idx == 18655 && ch != ' ' {
+        if line_idx == 11 && ch != ' ' {
             println!("Start DBG Mode!");
         }
 
@@ -322,7 +322,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     if let Some(tk) = &mut temp_key {
                                         mem.push(Preb::Key(tk.clone()));
                                     } else {
-                                        return Err(ParseErr::e(line_idx, ch_pos, "String key not yet initialize, but its was ending of key...?".to_string()));
+                                        return Err(ParseErr::e(line_idx, ch_pos, "String key not yet initialize, but its was ending of key...?".into()));
                                     }
                                     temp_key = None;
                                 }
@@ -330,7 +330,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     if let Some(tk) = &mut temp_key {
                                         tk.push(ch);
                                     } else {
-                                        return Err(ParseErr::e(line_idx, ch_pos, "String key not yet initialize, but its there was a character coming????".to_string()));
+                                        return Err(ParseErr::e(line_idx, ch_pos, "String key not yet initialize, but its there was a character coming????".into()));
                                     }
                                 }
                             }
@@ -347,7 +347,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Expected ':' followed by value of given key".to_string(),
+                                    "Expected ':' followed by value of given key".into(),
                                 ));
                             }
                         }
@@ -376,7 +376,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             return Err(ParseErr::e(
                                 line_idx,
                                 ch_pos,
-                                "Expected a Primitive Value!".to_string(),
+                                "Expected a Primitive Value!".into(),
                             ));
                         }
                     },
@@ -394,7 +394,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                                 return Err(ParseErr::e(
                                                     line_idx,
                                                     ch_pos,
-                                                    err_msg.to_string(),
+                                                    err_msg.into(),
                                                 ));
                                             }
                                         }
@@ -402,7 +402,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -410,7 +410,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not yet initialize".to_string(),
+                                        "Value is not yet initialize".into(),
                                     ));
                                 }
                                 // If everything pass, safe to reset the temp_val
@@ -433,14 +433,14 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                                 return Err(ParseErr::e(
                                                     line_idx,
                                                     ch_pos,
-                                                    err_msg.to_string(),
+                                                    err_msg.into(),
                                                 ));
                                             }
                                             if let Err(err_msg) = pack_object(&mut mem) {
                                                 return Err(ParseErr::e(
                                                     line_idx,
                                                     ch_pos,
-                                                    err_msg.to_string(),
+                                                    err_msg.into(),
                                                 ));
                                             }
                                         }
@@ -448,7 +448,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -456,7 +456,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not yet initialize".to_string(),
+                                        "Value is not yet initialize".into(),
                                     ));
                                 }
                                 temp_val = None;
@@ -473,7 +473,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected ']'! You are inside an Object, not a List!"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                             ' ' | '\n' | '\r' | '\t' => {
@@ -486,7 +486,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                                 return Err(ParseErr::e(
                                                     line_idx,
                                                     ch_pos,
-                                                    err_msg.to_string(),
+                                                    err_msg.into(),
                                                 ));
                                             }
                                         }
@@ -494,7 +494,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -502,7 +502,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not given".to_string(),
+                                        "Value is not given".into(),
                                     ));
                                 }
                                 temp_val = None;
@@ -515,7 +515,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Primitive value is not yet initialized".to_string(),
+                                        "Primitive value is not yet initialized".into(),
                                     ));
                                 }
                             }
@@ -533,7 +533,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            err_msg.to_string(),
+                                            err_msg.into(),
                                         ));
                                     }
                                 }
@@ -541,7 +541,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Expected Value".to_string(),
+                                        "Expected Value".into(),
                                     ));
                                 }
                             }
@@ -564,7 +564,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 // Check the top of mem stack before pack object
 
                                 if let Err(err_msg) = pack_object(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                                 // Update where we are
                                 state.0 = inside_what(&mem);
@@ -575,7 +575,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected ']'! You are inside an Object, not a List!"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                             ' ' | '\t' | '\r' | '\n' => {} // Ignore case
@@ -583,7 +583,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Expected '}' to finish the object".to_string(),
+                                    "Expected '}' to finish the object".into(),
                                 ));
                             }
                         }
@@ -599,7 +599,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            err_msg.to_string(),
+                                            err_msg.into(),
                                         ));
                                     }
                                 }
@@ -607,7 +607,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "String value is not yet initialized".to_string(),
+                                    "String value is not yet initialized".into(),
                                 ));
                             }
                             esc_ch = false;
@@ -622,14 +622,14 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     if let Some(tv) = &temp_val {
                                         mem.push(Preb::Val(JSON::Str(tv.clone())));
                                     } else {
-                                        return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".to_string()));
+                                        return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".into()));
                                     }
 
                                     if let Err(err_msg) = pack_entry(&mut mem) {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            err_msg.to_string(),
+                                            err_msg.into(),
                                         ));
                                     } else {
                                         temp_val = None;
@@ -645,7 +645,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            "String value is not yet initialize".to_string(),
+                                            "String value is not yet initialize".into(),
                                         ));
                                     }
                                 }
@@ -657,7 +657,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             '}' => {
                                 // Example case: { ... ,"key1": "value" }
                                 if let Err(err_msg) = pack_object(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                                 state.0 = inside_what(&mem);
                                 state.1 = S::EndPrimV;
@@ -672,7 +672,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected any character after end the String value"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                         }
@@ -694,7 +694,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         }
                         ']' => {
                             if let Err(err_msg) = pack_list(&mut mem) {
-                                return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                             }
                             state.0 = inside_what(&mem);
                             state.1 = S::EndPrimV;
@@ -713,7 +713,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 line_idx,
                                 ch_pos,
                                 "Expected value to be number, string, true, false or null"
-                                    .to_string(),
+                                    .into(),
                             ));
                         }
                     },
@@ -721,21 +721,21 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         return Err(ParseErr::e(
                             line_idx,
                             ch_pos,
-                            "state:ExpectKey is not allowed!".to_string(),
+                            "state:ExpectKey is not allowed!".into(),
                         ));
                     }
                     S::BgnKey => {
                         return Err(ParseErr::e(
                             line_idx,
                             ch_pos,
-                            "state:BgnKey is not allowed!".to_string(),
+                            "state:BgnKey is not allowed!".into(),
                         ));
                     }
                     S::EndKey => {
                         return Err(ParseErr::e(
                             line_idx,
                             ch_pos,
-                            "state:EndKey is not allowed!".to_string(),
+                            "state:EndKey is not allowed!".into(),
                         ));
                     }
                     S::ExpectVal => match ch {
@@ -763,7 +763,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 line_idx,
                                 ch_pos,
                                 "Expected value to be number, string, true, false or null"
-                                    .to_string(),
+                                    .into(),
                             ));
                         }
                     },
@@ -780,7 +780,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -788,7 +788,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not given".to_string(),
+                                        "Value is not given".into(),
                                     ));
                                 }
                                 temp_val = None;
@@ -799,7 +799,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected '}', currently inside a list not an Object!"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                             ']' => {
@@ -812,7 +812,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                                 return Err(ParseErr::e(
                                                     line_idx,
                                                     ch_pos,
-                                                    err_msg.to_string(),
+                                                    err_msg.into(),
                                                 ));
                                             }
                                         }
@@ -820,7 +820,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -828,31 +828,32 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not yet initialized".to_string(),
+                                        "Value is not yet initialized".into(),
                                     ));
                                 }
                                 temp_val = None;
                                 // Update where we are
                                 state.0 = inside_what(&mem);
                             }
-                            ' ' | '\n' | '\r' | '\t' => {
+                            ' ' | '\n' | '\r' | '\t' => { // TODO: Suspicious for bug!!
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
                                             mem.push(Preb::Val(pv));
-                                            if let Err(err_msg) = pack_entry(&mut mem) {
-                                                return Err(ParseErr::e(
-                                                    line_idx,
-                                                    ch_pos,
-                                                    err_msg.to_string(),
-                                                ));
-                                            }
+                                            state.1 = S::EndPrimV;
+                                            // if let Err(err_msg) = pack_entry(&mut mem) {
+                                            //     return Err(ParseErr::e(
+                                            //         line_idx,
+                                            //         ch_pos,
+                                            //         err_msg.to_string(),
+                                            //     ));
+                                            // }
                                         }
                                         Err(err_msg) => {
                                             return Err(ParseErr::e(
                                                 line_idx,
                                                 ch_pos,
-                                                err_msg.to_string(),
+                                                err_msg.into(),
                                             ));
                                         }
                                     }
@@ -860,7 +861,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Value is not yet initialized".to_string(),
+                                        "Value is not yet initialized".into(),
                                     ));
                                 }
                                 temp_val = None;
@@ -873,7 +874,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     return Err(ParseErr::e(
                                         line_idx,
                                         ch_pos,
-                                        "Primitive value is not yet initialized".to_string(),
+                                        "Primitive value is not yet initialized".into(),
                                     ));
                                 }
                             }
@@ -890,7 +891,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 // What we do is: just pack the object
                                 // Example [ ... "k12", true ]
                                 if let Err(err_msg) = pack_list(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                                 // Update where we are
                                 state.0 = inside_what(&mem);
@@ -901,7 +902,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Unexpected ']'! You are inside a List, not an Object!"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                             ' ' | '\t' | '\r' | '\n' => {}
@@ -910,7 +911,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     line_idx,
                                     ch_pos,
                                     "Expected ']' to finish the list or ',' for next value"
-                                        .to_string(),
+                                        .into(),
                                 ));
                             }
                         }
@@ -926,7 +927,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            err_msg.to_string(),
+                                            err_msg.into(),
                                         ));
                                     }
                                 }
@@ -934,7 +935,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "String value is not yet initialized".to_string(),
+                                    "String value is not yet initialized".into(),
                                 ));
                             }
                             esc_ch = false;
@@ -949,7 +950,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     if let Some(tv) = &temp_val {
                                         mem.push(Preb::Val(JSON::Str(tv.clone())));
                                     } else {
-                                        return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".to_string()));
+                                        return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".into()));
                                     }
                                     state.1 = S::EndStrV;
                                 }
@@ -961,7 +962,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         return Err(ParseErr::e(
                                             line_idx,
                                             ch_pos,
-                                            "String value is not yet initialize".to_string(),
+                                            "String value is not yet initialize".into(),
                                         ));
                                     }
                                 }
@@ -972,8 +973,8 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         match ch {
                             ']' => {
                                 // Example case: [ ... ,"value1", "value2" ]
-                                if let Err(err_msg) = pack_object(&mut mem) {
-                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.to_string()));
+                                if let Err(err_msg) = pack_list(&mut mem) {
+                                    return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                 }
                                 state.0 = inside_what(&mem);
                                 state.1 = S::EndPrimV;
@@ -987,7 +988,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpect any char after end of the String value".to_string(),
+                                    "Unexpect any char after end of the String value".into(),
                                 ));
                             }
                         }
@@ -1000,7 +1001,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                     return Err(ParseErr::e(
                         line_idx,
                         ch_pos,
-                        "Any character after the end of root container is not allowed.".to_string(),
+                        "Any character after the end of root container is not allowed.".into(),
                     ));
                 }
             },
@@ -1017,39 +1018,39 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         _ => Err(ParseErr::e(
                             line_idx,
                             ch_pos,
-                            "Unexpected root JSON data type".to_string(),
+                            "Unexpected root JSON data type".into(),
                         )),
                     },
                     _ => Err(ParseErr::e(
                         line_idx,
                         ch_pos,
-                        "Unexpected final tokens in parser memory".to_string(),
+                        "Unexpected final tokens in parser memory".into(),
                     )),
                 }
             } else {
                 Err(ParseErr::e(
                     line_idx,
                     ch_pos,
-                    "No data in parser memory".to_string(),
+                    "No data in parser memory".into(),
                 ))
             }
         } else {
             Err(ParseErr::e(
                 line_idx,
                 ch_pos,
-                "There is no or more than one JSON structure in a single file".to_string(),
+                "There is no or more than one JSON structure in a single file".into(),
             ))
         }
     } else {
         Err(ParseErr::e(
             line_idx,
             ch_pos,
-            "Incomplete JSON structure".to_string(),
+            "Incomplete JSON structure".into(),
         ))
     }
 }
 
-fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
+fn pretty_print(obj: &JSON, lvl: usize, indent_str: &str) -> Result<(), String>{
     match obj {
         JSON::Lst(lst) => {
             if lvl == 0 {
@@ -1059,19 +1060,19 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
             for i in 0..len {
                 let e_item = lst.get(i).unwrap();
                 match e_item {
-                    JSON::Int(i) => { print!("{}{i}", ident_str.repeat(lvl)); },
-                    JSON::Flt(f) => { print!("{}{f}", ident_str.repeat(lvl)); },
-                    JSON::Str(s) => { print!("{}\"{s}\"", ident_str.repeat(lvl)); },
+                    JSON::Int(i) => { print!("{}{i}", indent_str.repeat(lvl+1)); },
+                    JSON::Flt(f) => { print!("{}{f}", indent_str.repeat(lvl+1)); },
+                    JSON::Str(s) => { print!("{}\"{s}\"", indent_str.repeat(lvl+1)); },
                     JSON::Lst(_) => {
-                        println!("{}[", ident_str.repeat(lvl));
-                        pretty_print(e_item, lvl+1, ident_str)?
+                        println!("{}[", indent_str.repeat(lvl+1));
+                        pretty_print(e_item, lvl+1, indent_str)?
                     },
                     JSON::Obj(_) => {
-                        println!("{}{{", ident_str.repeat(lvl)); 
-                        pretty_print(e_item, lvl+1, ident_str)?
+                        println!("{}{{", indent_str.repeat(lvl+1)); 
+                        pretty_print(e_item, lvl+1, indent_str)?
                     },
-                    JSON::Bol(b) => { print!("{}{:?}",ident_str.repeat(lvl), b); },
-                    JSON::Nul => { print!("{}null", ident_str.repeat(lvl)); },
+                    JSON::Bol(b) => { print!("{}{:?}",indent_str.repeat(lvl+1), b); },
+                    JSON::Nul => { print!("{}null", indent_str.repeat(lvl+1)); },
                 }
                 if i < len - 1 {
                     println!(",");
@@ -1079,7 +1080,7 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
                     println!("");
                 }
             }
-            print!("{}]", " ".repeat(lvl));
+            print!("{}]", indent_str.repeat(lvl));
             Ok(())
         },
         JSON::Obj(obj) => {
@@ -1089,18 +1090,18 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
             let mut elem_count = obj.len();
             for (k, v) in obj {
                 elem_count -= 1;
-                print!("{}\"{k}\": ", ident_str.repeat(lvl+1));
+                print!("{}\"{k}\": ", indent_str.repeat(lvl+1));
                 match v {
                     JSON::Int(i) => { print!("{i}"); },
                     JSON::Flt(f) => { print!("{f}"); },
                     JSON::Str(s) => { print!("\"{s}\""); },
                     JSON::Lst(_) => {
                         println!("[");
-                        pretty_print(v, lvl+1, ident_str)?
+                        pretty_print(v, lvl+1, indent_str)?
                     },
                     JSON::Obj(_) => { 
                         println!("{{");
-                        pretty_print(v, lvl+1, ident_str)? 
+                        pretty_print(v, lvl+1, indent_str)? 
                     },
                     JSON::Bol(b) => { print!("{:?}", b); },
                     JSON::Nul => { print!("null"); },
@@ -1111,7 +1112,7 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
                     println!("");
                 }
             }
-            print!("{}}}", " ".repeat(lvl));
+            print!("{}}}", indent_str.repeat(lvl));
             Ok(())
         },
         _ => {
@@ -1136,7 +1137,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        if let Ok(str_content) = fs::read_to_string("json_test/Fai_testcase1.json") {
+        if let Ok(str_content) = fs::read_to_string("json_test/test.json") {
             println!("Testing json content : \n{str_content}");
             match parse(&str_content) {
                 Ok(json) => {
