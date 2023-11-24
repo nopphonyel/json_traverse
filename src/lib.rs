@@ -1053,7 +1053,7 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
     match obj {
         JSON::Lst(lst) => {
             if lvl == 0 {
-                println!("[ ");
+                println!("[");
             }
             let len = lst.len();
             for i in 0..len {
@@ -1063,11 +1063,11 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
                     JSON::Flt(f) => { print!("{}{f}", ident_str.repeat(lvl)); },
                     JSON::Str(s) => { print!("{}\"{s}\"", ident_str.repeat(lvl)); },
                     JSON::Lst(_) => {
-                        println!("{}[ ", ident_str.repeat(lvl));
+                        println!("{}[", ident_str.repeat(lvl));
                         pretty_print(e_item, lvl+1, ident_str)?
                     },
                     JSON::Obj(_) => {
-                        println!("{}{{ ", ident_str.repeat(lvl)); 
+                        println!("{}{{", ident_str.repeat(lvl)); 
                         pretty_print(e_item, lvl+1, ident_str)?
                     },
                     JSON::Bol(b) => { print!("{}{:?}",ident_str.repeat(lvl), b); },
@@ -1084,7 +1084,7 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
         },
         JSON::Obj(obj) => {
             if lvl == 0 {
-                println!("{{ ");
+                println!("{{");
             }
             let mut elem_count = obj.len();
             for (k, v) in obj {
@@ -1095,11 +1095,11 @@ fn pretty_print(obj: &JSON, lvl: usize, ident_str: &str) -> Result<(), String>{
                     JSON::Flt(f) => { print!("{f}"); },
                     JSON::Str(s) => { print!("\"{s}\""); },
                     JSON::Lst(_) => {
-                        println!("[ ");
+                        println!("[");
                         pretty_print(v, lvl+1, ident_str)?
                     },
                     JSON::Obj(_) => { 
-                        println!("{{ ");
+                        println!("{{");
                         pretty_print(v, lvl+1, ident_str)? 
                     },
                     JSON::Bol(b) => { print!("{:?}", b); },
@@ -1172,7 +1172,7 @@ mod tests {
 
     #[test]
     fn test_pretty_print(){
-        if let Ok(str_content) = fs::read_to_string("json_test/dook.json") {
+        if let Ok(str_content) = fs::read_to_string("json_test/test.json") {
             if let Ok(json_obj) = parse(&str_content){
                 let r = pretty_print(&json_obj, 0, "  ");
                 assert_eq!(r, Ok(()));
