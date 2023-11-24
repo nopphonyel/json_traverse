@@ -3,4 +3,9 @@
 /.idea
 /.vscode
 /json_test
+<<<<<<< HEAD
 /examples
+=======
+examples/prime_groups.rs
+prime_num.txt
+>>>>>>> a5832b899f6cfba884ada56762dd79b41bfd6744
