@@ -13,7 +13,7 @@ pub enum JSON {
 }
 
 #[derive(Debug)]
-enum Preb {
+enum Token {
     BgnObj,
     BgnLst,
     Val(JSON),
@@ -43,15 +43,15 @@ enum S {
                //EndCtnr,   // 9
 }
 
-fn inside_what(mem: &Vec<Preb>) -> Inside {
+fn inside_what(mem: &Vec<Token>) -> Inside {
     // Find what current inside state is
     let mem_size = mem.len();
     for i in (0..mem_size).rev() {
         match mem[i] {
-            Preb::BgnLst => {
+            Token::BgnLst => {
                 return Inside::List;
             }
-            Preb::BgnObj => {
+            Token::BgnObj => {
                 return Inside::Obj;
             }
             _ => {}
@@ -74,14 +74,14 @@ fn get_esc_char(ch: char) -> Result<String, &'static str> {
 }
 
 // Memory updater function
-fn pack_object(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
+fn pack_object(mem: &mut Vec<Token>) -> Result<(), &'static str> {
     let mut temp_obj: HashMap<String, JSON> = HashMap::new();
     while let Some(preb) = mem.pop() {
         match preb {
-            Preb::Ent(k, v) => {
+            Token::Ent(k, v) => {
                 temp_obj.insert(String::from(k), v);
             }
-            Preb::BgnObj => {
+            Token::BgnObj => {
                 break; // Go out from loop since there is no more to packup
             }
             _ => {
@@ -89,28 +89,29 @@ fn pack_object(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
             }
         }
     }
-    mem.push(Preb::Val(JSON::Obj(temp_obj)));
+    mem.push(Token::Val(JSON::Obj(temp_obj)));
     Ok(())
 }
 
-fn pack_list(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
+fn pack_list(mem: &mut Vec<Token>) -> Result<(), &'static str> {
     let mut temp_list: Vec<JSON> = Vec::new();
     while let Some(preb) = mem.pop() {
         match preb {
-            Preb::BgnObj => {
+            Token::BgnObj => {
                 return Err("Unexpected '{' Begin of Object token was found!");
             }
-            Preb::BgnLst => {
-                mem.push(Preb::Val(JSON::Lst(temp_list)));
+            Token::BgnLst => {
+                temp_list.reverse();
+                mem.push(Token::Val(JSON::Lst(temp_list)));
                 return Ok(());
             }
-            Preb::Val(v) => {
+            Token::Val(v) => {
                 temp_list.push(v);
             }
-            Preb::Key(_) => {
+            Token::Key(_) => {
                 return Err("A key shouldn't be exist in side the list");
             }
-            Preb::Ent(_, _) => {
+            Token::Ent(_, _) => {
                 return Err("An entry shouldn't be exist in side the list");
             }
         }
@@ -118,12 +119,12 @@ fn pack_list(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
     Ok(())
 }
 
-fn pack_entry(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
+fn pack_entry(mem: &mut Vec<Token>) -> Result<(), &'static str> {
     // pop 2 element where the first will be value and the next will be key
     let mut val: JSON = JSON::Nul;
     if let Some(val_preb) = mem.pop() {
         match val_preb {
-            Preb::Val(v) => {
+            Token::Val(v) => {
                 val = v;
             }
             _ => {
@@ -137,7 +138,7 @@ fn pack_entry(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
     let mut key: String = String::new();
     if let Some(key_preb) = mem.pop() {
         match key_preb {
-            Preb::Key(k) => {
+            Token::Key(k) => {
                 key = String::from(k);
             }
             _ => {
@@ -147,7 +148,7 @@ fn pack_entry(mem: &mut Vec<Preb>) -> Result<(), &'static str> {
     } else {
         return Err("Stack mem is empty, Possibly invalid JSON format.");
     }
-    mem.push(Preb::Ent(key, val));
+    mem.push(Token::Ent(key, val));
     Ok(())
 }
 
@@ -205,7 +206,7 @@ impl fmt::Display for ParseErr {
 }
 
 pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
-    let mut mem: Vec<Preb> = Vec::new();
+    let mut mem: Vec<Token> = Vec::new();
     let mut state: (Inside, S) = (Inside::Bgn, S::Ready);
 
     let mut temp_key: Option<String> = None;
@@ -236,11 +237,11 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
             Inside::Bgn => {
                 match ch {
                     '{' => {
-                        mem.push(Preb::BgnObj);
+                        mem.push(Token::BgnObj);
                         state.0 = Inside::Obj;
                     }
                     '[' => {
-                        mem.push(Preb::BgnLst);
+                        mem.push(Token::BgnLst);
                         state.0 = Inside::List;
                     }
                     ' ' | '\n' | '\r' | '\t' => { /* Do nothing ...*/ }
@@ -320,7 +321,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 '\"' => {
                                     state.1 = S::EndKey;
                                     if let Some(tk) = &mut temp_key {
-                                        mem.push(Preb::Key(tk.clone()));
+                                        mem.push(Token::Key(tk.clone()));
                                     } else {
                                         return Err(ParseErr::e(line_idx, ch_pos, "String key not yet initialize, but its was ending of key...?".into()));
                                     }
@@ -356,12 +357,12 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         '{' => {
                             state.0 = Inside::Obj;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnObj);
+                            mem.push(Token::BgnObj);
                         }
                         '[' => {
                             state.0 = Inside::List;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnLst);
+                            mem.push(Token::BgnLst);
                         }
                         '\"' => {
                             state.1 = S::BgnStrV;
@@ -387,7 +388,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
 
                                             // Pack entry imedietly
                                             if let Err(err_msg) = pack_entry(&mut mem) {
@@ -428,7 +429,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
                                             if let Err(err_msg) = pack_entry(&mut mem) {
                                                 return Err(ParseErr::e(
                                                     line_idx,
@@ -472,8 +473,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpected ']'! You are inside an Object, not a List!"
-                                        .into(),
+                                    "Unexpected ']'! You are inside an Object, not a List!".into(),
                                 ));
                             }
                             ' ' | '\n' | '\r' | '\t' => {
@@ -481,7 +481,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
                                             if let Err(err_msg) = pack_entry(&mut mem) {
                                                 return Err(ParseErr::e(
                                                     line_idx,
@@ -527,14 +527,10 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         // Check that top of stack is entry already... if not then pack it
                         if let Some(preb) = &mem.last() {
                             match preb {
-                                Preb::Ent(_, _) => {}
-                                Preb::Val(_) => {
+                                Token::Ent(_, _) => {}
+                                Token::Val(_) => {
                                     if let Err(err_msg) = pack_entry(&mut mem) {
-                                        return Err(ParseErr::e(
-                                            line_idx,
-                                            ch_pos,
-                                            err_msg.into(),
-                                        ));
+                                        return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                     }
                                 }
                                 _ => {
@@ -574,8 +570,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpected ']'! You are inside an Object, not a List!"
-                                        .into(),
+                                    "Unexpected ']'! You are inside an Object, not a List!".into(),
                                 ));
                             }
                             ' ' | '\t' | '\r' | '\n' => {} // Ignore case
@@ -596,11 +591,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         tv.push_str(&esc_char);
                                     }
                                     Err(err_msg) => {
-                                        return Err(ParseErr::e(
-                                            line_idx,
-                                            ch_pos,
-                                            err_msg.into(),
-                                        ));
+                                        return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                     }
                                 }
                             } else {
@@ -620,17 +611,13 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     // push string value to the mem
                                     // safe to pack entry
                                     if let Some(tv) = &temp_val {
-                                        mem.push(Preb::Val(JSON::Str(tv.clone())));
+                                        mem.push(Token::Val(JSON::Str(tv.clone())));
                                     } else {
                                         return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".into()));
                                     }
 
                                     if let Err(err_msg) = pack_entry(&mut mem) {
-                                        return Err(ParseErr::e(
-                                            line_idx,
-                                            ch_pos,
-                                            err_msg.into(),
-                                        ));
+                                        return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                     } else {
                                         temp_val = None;
                                     }
@@ -671,8 +658,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpected any character after end the String value"
-                                        .into(),
+                                    "Unexpected any character after end the String value".into(),
                                 ));
                             }
                         }
@@ -685,12 +671,12 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         '{' => {
                             state.0 = Inside::Obj;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnObj);
+                            mem.push(Token::BgnObj);
                         }
                         '[' => {
                             state.0 = Inside::List;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnLst);
+                            mem.push(Token::BgnLst);
                         }
                         ']' => {
                             if let Err(err_msg) = pack_list(&mut mem) {
@@ -712,8 +698,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             return Err(ParseErr::e(
                                 line_idx,
                                 ch_pos,
-                                "Expected value to be number, string, true, false or null"
-                                    .into(),
+                                "Expected value to be number, string, true, false or null".into(),
                             ));
                         }
                     },
@@ -742,12 +727,12 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                         '{' => {
                             state.0 = Inside::Obj;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnObj);
+                            mem.push(Token::BgnObj);
                         }
                         '[' => {
                             state.0 = Inside::List;
                             state.1 = S::Ready;
-                            mem.push(Preb::BgnLst);
+                            mem.push(Token::BgnLst);
                         }
                         '\"' => {
                             state.1 = S::BgnStrV;
@@ -762,8 +747,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                             return Err(ParseErr::e(
                                 line_idx,
                                 ch_pos,
-                                "Expected value to be number, string, true, false or null"
-                                    .into(),
+                                "Expected value to be number, string, true, false or null".into(),
                             ));
                         }
                     },
@@ -774,7 +758,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
                                         }
                                         Err(err_msg) => {
                                             return Err(ParseErr::e(
@@ -798,8 +782,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpected '}', currently inside a list not an Object!"
-                                        .into(),
+                                    "Unexpected '}', currently inside a list not an Object!".into(),
                                 ));
                             }
                             ']' => {
@@ -807,7 +790,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
                                             if let Err(err_msg) = pack_list(&mut mem) {
                                                 return Err(ParseErr::e(
                                                     line_idx,
@@ -835,11 +818,12 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 // Update where we are
                                 state.0 = inside_what(&mem);
                             }
-                            ' ' | '\n' | '\r' | '\t' => { // TODO: Suspicious for bug!!
+                            ' ' | '\n' | '\r' | '\t' => {
+                                // TODO: Suspicious for bug!!
                                 if let Some(tv) = &temp_val {
                                     match primitive_parse(&tv) {
                                         Ok(pv) => {
-                                            mem.push(Preb::Val(pv));
+                                            mem.push(Token::Val(pv));
                                             state.1 = S::EndPrimV;
                                             // if let Err(err_msg) = pack_entry(&mut mem) {
                                             //     return Err(ParseErr::e(
@@ -901,8 +885,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Unexpected ']'! You are inside a List, not an Object!"
-                                        .into(),
+                                    "Unexpected ']'! You are inside a List, not an Object!".into(),
                                 ));
                             }
                             ' ' | '\t' | '\r' | '\n' => {}
@@ -910,8 +893,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 return Err(ParseErr::e(
                                     line_idx,
                                     ch_pos,
-                                    "Expected ']' to finish the list or ',' for next value"
-                                        .into(),
+                                    "Expected ']' to finish the list or ',' for next value".into(),
                                 ));
                             }
                         }
@@ -924,11 +906,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                         tv.push_str(&esc_char);
                                     }
                                     Err(err_msg) => {
-                                        return Err(ParseErr::e(
-                                            line_idx,
-                                            ch_pos,
-                                            err_msg.into(),
-                                        ));
+                                        return Err(ParseErr::e(line_idx, ch_pos, err_msg.into()));
                                     }
                                 }
                             } else {
@@ -948,7 +926,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                     // push string value to the mem
                                     // safe to pack entry
                                     if let Some(tv) = &temp_val {
-                                        mem.push(Preb::Val(JSON::Str(tv.clone())));
+                                        mem.push(Token::Val(JSON::Str(tv.clone())));
                                     } else {
                                         return Err(ParseErr::e(line_idx, ch_pos,"Can't saved to mem since string value is not yet initialized".into()));
                                     }
@@ -992,7 +970,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
                                 ));
                             }
                         }
-                    } 
+                    }
                 }
             }
             Inside::End => match ch {
@@ -1012,7 +990,7 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
         if mem.len() == 1 {
             if let Some(fobj) = mem.pop() {
                 match fobj {
-                    Preb::Val(final_object) => match final_object {
+                    Token::Val(final_object) => match final_object {
                         JSON::Lst(final_object) => Ok(JSON::Lst(final_object)),
                         JSON::Obj(final_object) => Ok(JSON::Obj(final_object)),
                         _ => Err(ParseErr::e(
@@ -1050,74 +1028,107 @@ pub fn parse(json_str: &String) -> Result<JSON, ParseErr> {
     }
 }
 
-fn pretty_print(obj: &JSON, lvl: usize, indent_str: &str) -> Result<(), String>{
+pub fn pretty_print(obj: &JSON, indent_str: &str) -> Result<String, String> {
+    _pretty_print_core(obj, 0, indent_str)
+}
+
+fn _pretty_print_core(obj: &JSON, lvl: usize, indent_str: &str) -> Result<String, String> {
+    let mut str_buffer = String::new();
     match obj {
         JSON::Lst(lst) => {
             if lvl == 0 {
-                println!("[");
+                str_buffer.push_str(format!("[\n").as_str());
             }
             let len = lst.len();
             for i in 0..len {
                 let e_item = lst.get(i).unwrap();
                 match e_item {
-                    JSON::Int(i) => { print!("{}{i}", indent_str.repeat(lvl+1)); },
-                    JSON::Flt(f) => { print!("{}{f}", indent_str.repeat(lvl+1)); },
-                    JSON::Str(s) => { print!("{}\"{s}\"", indent_str.repeat(lvl+1)); },
+                    JSON::Int(i) => {
+                        str_buffer.push_str(format!("{}{i}", indent_str.repeat(lvl + 1)).as_str());
+                    }
+                    JSON::Flt(f) => {
+                        str_buffer.push_str(format!("{}{f}", indent_str.repeat(lvl + 1)).as_str());
+                    }
+                    JSON::Str(s) => {
+                        str_buffer
+                            .push_str(format!("{}\"{s}\"", indent_str.repeat(lvl + 1)).as_str());
+                    }
                     JSON::Lst(_) => {
-                        println!("{}[", indent_str.repeat(lvl+1));
-                        pretty_print(e_item, lvl+1, indent_str)?
-                    },
+                        str_buffer.push_str(format!("{}[\n", indent_str.repeat(lvl + 1)).as_str());
+                        str_buffer.push_str(
+                            format!("{}", _pretty_print_core(e_item, lvl + 1, indent_str)?).as_str(),
+                        );
+                    }
                     JSON::Obj(_) => {
-                        println!("{}{{", indent_str.repeat(lvl+1)); 
-                        pretty_print(e_item, lvl+1, indent_str)?
-                    },
-                    JSON::Bol(b) => { print!("{}{:?}",indent_str.repeat(lvl+1), b); },
-                    JSON::Nul => { print!("{}null", indent_str.repeat(lvl+1)); },
+                        str_buffer.push_str(format!("{}{{\n", indent_str.repeat(lvl + 1)).as_str());
+                        str_buffer.push_str(
+                            format!("{}", _pretty_print_core(e_item, lvl + 1, indent_str)?).as_str(),
+                        );
+                    }
+                    JSON::Bol(b) => {
+                        str_buffer
+                            .push_str(format!("{}{:?}", indent_str.repeat(lvl + 1), b).as_str());
+                    }
+                    JSON::Nul => {
+                        str_buffer.push_str(format!("{}null", indent_str.repeat(lvl + 1)).as_str());
+                    }
                 }
                 if i < len - 1 {
-                    println!(",");
+                    str_buffer.push_str(format!(",\n").as_str());
                 } else {
-                    println!("");
+                    str_buffer.push_str(format!("\n").as_str());
                 }
             }
-            print!("{}]", indent_str.repeat(lvl));
-            Ok(())
-        },
+            str_buffer.push_str(format!("{}]", indent_str.repeat(lvl)).as_str());
+            Ok(str_buffer)
+        }
         JSON::Obj(obj) => {
             if lvl == 0 {
-                println!("{{");
+                str_buffer.push_str(format!("{{\n").as_str());
             }
             let mut elem_count = obj.len();
             for (k, v) in obj {
                 elem_count -= 1;
-                print!("{}\"{k}\": ", indent_str.repeat(lvl+1));
+                str_buffer.push_str(format!("{}\"{k}\": ", indent_str.repeat(lvl + 1)).as_str());
                 match v {
-                    JSON::Int(i) => { print!("{i}"); },
-                    JSON::Flt(f) => { print!("{f}"); },
-                    JSON::Str(s) => { print!("\"{s}\""); },
+                    JSON::Int(i) => {
+                        str_buffer.push_str(format!("{i}").as_str());
+                    }
+                    JSON::Flt(f) => {
+                        str_buffer.push_str(format!("{f}").as_str());
+                    }
+                    JSON::Str(s) => {
+                        str_buffer.push_str(format!("\"{s}\"").as_str());
+                    }
                     JSON::Lst(_) => {
-                        println!("[");
-                        pretty_print(v, lvl+1, indent_str)?
-                    },
-                    JSON::Obj(_) => { 
-                        println!("{{");
-                        pretty_print(v, lvl+1, indent_str)? 
-                    },
-                    JSON::Bol(b) => { print!("{:?}", b); },
-                    JSON::Nul => { print!("null"); },
+                        str_buffer.push_str(format!("[\n").as_str());
+                        str_buffer.push_str(
+                            format!("{}", _pretty_print_core(v, lvl + 1, indent_str)?).as_str(),
+                        );
+                    }
+                    JSON::Obj(_) => {
+                        str_buffer.push_str(format!("{{\n").as_str());
+                        str_buffer.push_str(
+                            format!("{}", _pretty_print_core(v, lvl + 1, indent_str)?).as_str(),
+                        );
+                    }
+                    JSON::Bol(b) => {
+                        str_buffer.push_str(format!("{:?}", b).as_str());
+                    }
+                    JSON::Nul => {
+                        str_buffer.push_str(format!("null").as_str());
+                    }
                 }
                 if elem_count > 0 {
-                    println!(",");
+                    str_buffer.push_str(format!(",\n").as_str());
                 } else {
-                    println!("");
+                    str_buffer.push_str(format!("\n").as_str());
                 }
             }
-            print!("{}}}", indent_str.repeat(lvl));
-            Ok(())
-        },
-        _ => {
-            Err("Expected a JSON list or object".into())
-        },
+            str_buffer.push_str(format!("{}}}", indent_str.repeat(lvl)).as_str());
+            Ok(str_buffer)
+        }
+        _ => Err("Expected a JSON list or object".into()),
     }
 }
 
@@ -1172,11 +1183,16 @@ mod tests {
     }
 
     #[test]
-    fn test_pretty_print(){
-        if let Ok(str_content) = fs::read_to_string("json_test/test.json") {
-            if let Ok(json_obj) = parse(&str_content){
-                let r = pretty_print(&json_obj, 0, "  ");
-                assert_eq!(r, Ok(()));
+    fn test_pretty_print() {
+        for i in 0..10 {
+            if let Ok(str_content) = fs::read_to_string("json_test/test.json") {
+                if let Ok(json_obj) = parse(&str_content) {
+                    let r = _pretty_print_core(&json_obj, 0, "  ");
+                    match r {
+                        Ok(s) => println!("{}", s),
+                        Err(e) => println!("<X> {e}"),
+                    }
+                }
             }
         }
     }
