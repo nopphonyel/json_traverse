@@ -3,6 +3,9 @@
 ## What
 This lib will parse the JSON string into a composition of HashMaps and Vectors where JSON Object will be convert to HashMaps and JSON List will be the Vector. I decided to use Hashmap because it is easy to retrive the key and iterate through it without any fancy method.
 
+## Changelog
+- 12.12.2023: Adding new function `pretty_print()`. Used for print the beautiful JSON string.
+
 ## Why
 I'm looking for a JSON parsing lib in Rust language that easily to retreive list JSON Object keys. I tried `serde`, maybe I'm too dumb but I can't find any simple way to retreive it, so I decided to implement a JSON parser.
 
@@ -27,3 +30,4 @@ Currently, it is still in the alpha stage. I didn't finish the test yet, also th
 ### *PS: 
 - For the float data type, I still find a good way to merge with `JSON::Int` and renamed it to `JSON::Num`... but I still not sure which will be the best solution.
 - all of `panics` is going to be remove soon.
+
